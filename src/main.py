@@ -9,7 +9,7 @@ if __name__ == '__main__':
     n_v_list.append(tuple(n_v))
 
     
-  k = 3
+  k = 5
   clf = classifier.Classifier(k, n_v_list)
 
   #学習
@@ -23,4 +23,4 @@ if __name__ == '__main__':
 
   #パープレキシティの計算
   perplexity = clf.get_perplexity(testData)
-  print perplexity
+  print "perplexity: " + str(perplexity)
