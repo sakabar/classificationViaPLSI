@@ -9,6 +9,8 @@ class Classifier:
 
     self.noun_list = list(set(map(lambda (n,v): n, n_v_list)))
     self.verb_list = list(set(map(lambda (n,v): v, n_v_list)))
+
+    #初期化
     self.init_p_z()
     self.init_p_x_z()
     self.init_p_y_z()
@@ -36,7 +38,20 @@ class Classifier:
       for i in xrange(0, self.k):
         self.p_y_z[verb].append(random.random())
 
+  def get_perplexity(self, tuplelist):
+    s = 0.0
+    for (n, v) in tuplelist:
+      s += math.log(self.get_p_x_y(n, v), 2)
+
+    s /= (- len (tuplelist))
+    return 2**s
+
+  def learnEM(self):
+    #仮実装
+    return
+
         
+  #getter
   def get_k(self):
     return self.k
 
@@ -52,20 +67,9 @@ class Classifier:
   def get_p_z_xy(self):
     return self.p_z_xy
 
-  def learnEM(self):
-    #仮実装
-    return
-
   def get_p_x_y(self, n, v):
     ans = 0.0
     for i in xrange(0, self.k):
       ans += self.p_z[i] * self.p_x_z[n][i] * self.p_y_z[v][i]
     return ans
     
-  def get_perplexity(self, tuplelist):
-    s = 0.0
-    for (n, v) in tuplelist:
-      s += math.log(self.get_p_x_y(n, v), 2)
-
-    s /= (- len (tuplelist))
-    return 2**s
