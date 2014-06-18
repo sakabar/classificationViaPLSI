@@ -14,7 +14,7 @@ class Classifier:
     self.init_p_z()
     self.init_p_x_z()
     self.init_p_y_z()
-
+    self.init_p_z_xy()
 
   #p(z)を乱数で初期化
   def init_p_z(self):
@@ -38,6 +38,17 @@ class Classifier:
       for i in xrange(0, self.k):
         self.p_y_z[verb].append(random.random())
 
+  #p(z | x, y)を乱数で初期化
+  #p[x][y][z]の順なので注意すること
+  def init_p_z_xy(self):
+    self.p_z_xy = {}
+    for noun in self.noun_list:
+      self.p_z_xy[noun] = {}
+      for verb in self.verb_list:
+        self.p_z_xy[noun][verb] = []
+        for i in xrange(0, self.k):
+          self.p_z_xy[noun][verb].append(random.random())
+
   def get_perplexity(self, tuplelist):
     s = 0.0
     for (n, v) in tuplelist:
@@ -46,6 +57,13 @@ class Classifier:
     s /= (- len (tuplelist))
     return 2**s
 
+  # def learn_Estep(self):
+  #   for (noun, verb) in self.n_v_list:
+  #     for i in xrange(0, self.k):
+  #       nume = self.p_z[z] * self.p_x_z[noun][z] * self.p_y_z[verb][z]
+  #       deno = sum of hoge
+  #       self.[noun][verb][z] = 
+    
   def learnEM(self):
     #仮実装
     return
