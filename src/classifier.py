@@ -1,6 +1,7 @@
 #coding: utf-8
 import random
 import math
+import collections
 
 class Classifier:
   def __init__(self, k, n_v_list):
@@ -9,6 +10,7 @@ class Classifier:
 
     self.noun_list = list(set(map(lambda (n,v): n, n_v_list)))
     self.verb_list = list(set(map(lambda (n,v): v, n_v_list)))
+    self.n_v_counter = collections.Counter(n_v_list)
 
     #初期化
     self.init_log_p_z()
@@ -66,12 +68,32 @@ class Classifier:
         log_nume = self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i]
 
         self.log_p_z_xy[noun][verb][i] = log_nume - log_deno
-    
-  def learnEM(self):
-    self.learn_Estep()
+
+
+  def learn_Mstep(self):
+    #P(z)を更新
+    for i in xrange(0, self.k):
+      deno = 0
+      for j in xrange(0, self.k):
+        for (noun, verb) in self.n_v_list:
+          deno += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][j])
+      log_deno = math.log10(deno)
+
+      nume = 0
+      for (noun, verb) in self.n_v_list:
+        nume += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][i])
+      log_nume = math.log10(nume)
+
+      self.log_p_z[i] = log_nume - log_deno
+
     return
 
-        
+  def learnEM(self):
+    self.learn_Estep()
+    self.learn_Mstep()
+    return
+
+
   #getter
   def get_k(self):
     return self.k
@@ -84,7 +106,7 @@ class Classifier:
 
   def get_log_p_y_z(self):
     return self.log_p_y_z
-    
+
   def get_log_p_z_xy(self):
     return self.log_p_z_xy
 
@@ -93,4 +115,4 @@ class Classifier:
     for i in xrange(0, self.k):
       ans += 10**(self.log_p_z[i] + self.log_p_x_z[n][i] + self.log_p_y_z[v][i])
     return math.log10(ans)
-    
+
