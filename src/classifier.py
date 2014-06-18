@@ -11,48 +11,50 @@ class Classifier:
     self.verb_list = list(set(map(lambda (n,v): v, n_v_list)))
 
     #初期化
-    self.init_p_z()
-    self.init_p_x_z()
-    self.init_p_y_z()
-    self.init_p_z_xy()
+    self.init_log_p_z()
+    self.init_log_p_x_z()
+    self.init_log_p_y_z()
+    self.init_log_p_z_xy()
 
   #p(z)を乱数で初期化
-  def init_p_z(self):
-    self.p_z = []
+  def init_log_p_z(self):
+    self.log_p_z = []
     for i in xrange(0, self.k):
-      self.p_z.append(random.random())
+      self.log_p_z.append(math.log10(random.random()))
 
   #p(z | x)を乱数で初期化
-  def init_p_x_z(self):
-    self.p_x_z = {}
+  def init_log_p_x_z(self):
+    self.log_p_x_z = {}
     for noun in self.noun_list:
-      self.p_x_z[noun] = []
+      self.log_p_x_z[noun] = []
       for i in xrange(0, self.k):
-        self.p_x_z[noun].append(random.random())
+        self.log_p_x_z[noun].append(math.log10(random.random()))
 
   #p(z | y)を乱数で初期化
-  def init_p_y_z(self):
-    self.p_y_z = {}
+  def init_log_p_y_z(self):
+    self.log_p_y_z = {}
     for verb in self.verb_list:
-      self.p_y_z[verb] = []
+      self.log_p_y_z[verb] = []
       for i in xrange(0, self.k):
-        self.p_y_z[verb].append(random.random())
+        self.log_p_y_z[verb].append(math.log10(random.random()))
 
   #p(z | x, y)を乱数で初期化
   #p[x][y][z]の順なので注意すること
-  def init_p_z_xy(self):
-    self.p_z_xy = {}
+  def init_log_p_z_xy(self):
+    self.log_p_z_xy = {}
     for noun in self.noun_list:
-      self.p_z_xy[noun] = {}
+      self.log_p_z_xy[noun] = {}
       for verb in self.verb_list:
-        self.p_z_xy[noun][verb] = []
+        self.log_p_z_xy[noun][verb] = []
         for i in xrange(0, self.k):
-          self.p_z_xy[noun][verb].append(random.random())
+          self.log_p_z_xy[noun][verb].append(math.log10(random.random()))
 
   def get_perplexity(self, tuplelist):
     s = 0.0
     for (n, v) in tuplelist:
-      s += math.log(self.get_p_x_y(n, v), 2)
+      p = 10 ** self.get_log_p_x_y(n, v)
+      base = 2
+      s += math.log(p, base)
 
     s /= (- len (tuplelist))
     return 2**s
@@ -60,7 +62,7 @@ class Classifier:
   # def learn_Estep(self):
   #   for (noun, verb) in self.n_v_list:
   #     for i in xrange(0, self.k):
-  #       nume = self.p_z[z] * self.p_x_z[noun][z] * self.p_y_z[verb][z]
+  #       nume = self.log_p_z[z] * self.log_p_x_z[noun][z] * self.log_p_y_z[verb][z]
   #       deno = sum of hoge
   #       self.[noun][verb][z] = 
     
@@ -76,18 +78,18 @@ class Classifier:
   def get_n_v_list(self):
     return self.n_v_list
 
-  def get_p_x_z(self):
-    return self.p_x_z
+  def get_log_p_x_z(self):
+    return self.log_p_x_z
 
-  def get_p_y_z(self):
-    return self.p_y_z
+  def get_log_p_y_z(self):
+    return self.log_p_y_z
     
-  def get_p_z_xy(self):
-    return self.p_z_xy
+  def get_log_p_z_xy(self):
+    return self.log_p_z_xy
 
-  def get_p_x_y(self, n, v):
+  def get_log_p_x_y(self, n, v):
     ans = 0.0
     for i in xrange(0, self.k):
-      ans += self.p_z[i] * self.p_x_z[n][i] * self.p_y_z[v][i]
-    return ans
+      ans += 10**(self.log_p_z[i] + self.log_p_x_z[n][i] + self.log_p_y_z[v][i])
+    return math.log10(ans)
     
