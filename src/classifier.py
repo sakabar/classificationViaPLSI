@@ -137,8 +137,19 @@ class Classifier:
     return
 
   def learnEM(self):
-    self.learn_Estep()
-    self.learn_Mstep()
+    prev_log_likelihood = 0
+    log_likelihood = 1000000
+    eps = 100
+    
+    while (abs(log_likelihood - prev_log_likelihood) > eps):
+      prev_likelihood = log_likelihood
+      self.learn_Estep()
+      self.learn_Mstep()
+
+      log_likelihood = 0
+      for (noun, verb) in self.n_v_list:
+        log_likelihood += self.n_v_counter[(noun, verb)] * self.get_log_p_x_y(noun, verb)
+      print log_likelihood
 
     return
 
@@ -162,7 +173,6 @@ class Classifier:
   def get_log_p_x_y(self, noun, verb):
     ans = 0.0
     for i in xrange(0, self.k):
-      # ans += 10.0 ** (self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i])
-      ans += 10.0 ** (self.log_p_x_z[noun][i])
+      ans += 10.0 ** (self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i])
     return math.log10(ans)
 
