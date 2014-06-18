@@ -72,13 +72,13 @@ class Classifier:
 
   def learn_Mstep(self):
     #P(z)を更新
-    for i in xrange(0, self.k):
-      deno = 0
-      for j in xrange(0, self.k):
-        for (noun, verb) in self.n_v_list:
-          deno += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][j])
-      log_deno = math.log10(deno)
+    deno = 0
+    for j in xrange(0, self.k):
+      for (noun, verb) in self.n_v_list:
+        deno += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][j])
+    log_deno = math.log10(deno)
 
+    for i in xrange(0, self.k):
       nume = 0
       for (noun, verb) in self.n_v_list:
         nume += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][i])
@@ -86,6 +86,24 @@ class Classifier:
 
       self.log_p_z[i] = log_nume - log_deno
 
+
+    #P(x | z)を更新
+    for i in xrange(0, self.k):
+      deno = 0
+      for (x, y) in self.n_v_list:
+        deno += self.n_v_counter[(x, y)] * (10 ** self.log_p_z_xy[x][y][i])
+      log_deno = math.log10(deno)
+      for noun in self.noun_list:
+        print noun
+
+        nume = 0
+        for verb in self.verb_list:
+          if (noun, verb) in self.n_v_list:
+            nume += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][i])
+        log_nume = math.log10(nume)
+          
+        self.log_p_x_z = log_nume - log_deno
+        
     return
 
   def learnEM(self):
