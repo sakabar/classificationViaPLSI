@@ -59,15 +59,16 @@ class Classifier:
     s /= (- len (tuplelist))
     return 2**s
 
-  # def learn_Estep(self):
-  #   for (noun, verb) in self.n_v_list:
-  #     for i in xrange(0, self.k):
-  #       nume = self.log_p_z[z] * self.log_p_x_z[noun][z] * self.log_p_y_z[verb][z]
-  #       deno = sum of hoge
-  #       self.[noun][verb][z] = 
+  def learn_Estep(self):
+    for (noun, verb) in self.n_v_list:
+      log_deno = math.log10(sum (map (lambda i: 10**(self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i]), xrange(0, self.k))))
+      for i in xrange(0, self.k):
+        log_nume = self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i]
+
+        self.log_p_z_xy[noun][verb][i] = log_nume - log_deno
     
   def learnEM(self):
-    #仮実装
+    self.learn_Estep()
     return
 
         
