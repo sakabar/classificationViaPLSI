@@ -71,12 +71,23 @@ class Classifier:
 
   def learn_Estep(self):
     for (noun, verb) in self.n_v_list:
-      log_deno = math.log10(sum (map (lambda i: 10**(self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i]), xrange(0, self.k))))
+      #deno: 分母
+      #   Sum_{z'} P(z')*P(x|z')*P(y|z')
+      # = Sum_{z'} 10^log10(P(z')) * 10^log10(P(x|z')) * 10^log10(P(y|z'))
+      # = Sum_{z'} 10^(log10(P(z') + log10(P(x|z')) + log10(P(y|z')))
+
+      deno = (sum (map (lambda i: 10**(self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i]), xrange(0, self.k))))
+
+      #nume:分子
+      #   P(z)*P(x|z)*P(y|z)
+      # = 10^log10(P(z)) * 10^log10(P(x|z)) * 10^log10(P(y|z))
+      # = 10^(log10(P(z) + log10(P(x|z)) + log10(P(y|z)))
+
       for i in xrange(0, self.k):
-        log_nume = self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i]
+        #nume = 10**(self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i])
+        log10_nume = (self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i])
 
-        self.log_p_z_xy[noun][verb][i] = log_nume - log_deno
-
+        self.log_p_z_xy[noun][verb][i] = log10_nume - math.log10(deno)
 
   def learn_Mstep(self):
     #P(z)を更新
