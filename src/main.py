@@ -9,12 +9,22 @@ if __name__ == '__main__':
     n_v_list.append(tuple(n_v))
 
     
-  k = 5
+  k = 2
   clf = classifier.Classifier(k, n_v_list)
 
+  print str(k) + " topics."
+  print "start learning."
   #学習
   clf.learnEM()
+  print "finished."
 
+
+  # print clf.sum_of_p_z_is_1()
+  # print clf.sum_of_p_x_z_is_1()
+  # print clf.sum_of_p_y_z_is_1()
+  # print clf.sum_of_p_x_y_is_1()
+  
+  
   #テストデータの読み込み
   testData = []
   for line in sys.stdin:

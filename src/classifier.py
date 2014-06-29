@@ -1,6 +1,7 @@
 #coding: utf-8
-import random
+import sys
 import math
+import random
 import collections
 
 class Classifier:
@@ -9,20 +10,21 @@ class Classifier:
 
     #self.n_v_listなどは重復なし
     self.n_v_list = list(set(n_v_list))
-    self.noun_list = (list(set(map(lambda (n,v): n, n_v_list))))
-    self.verb_list = (list(set(map(lambda (n,v): v, n_v_list))))
+    self.noun_set = (list(set(map(lambda (n,v): n, n_v_list))))
+    self.verb_set = (list(set(map(lambda (n,v): v, n_v_list))))
 
     #個数はv_v_counterで記録
     self.n_v_counter = collections.Counter(n_v_list)
 
-    # print "noun_list: " + str(len(self.noun_list)) #debug
-    # print "verb_list: " + str(len(self.verb_list)) #debug
+    # print "noun_list: " + str(len(self.noun_set)) #debug
+    # print "verb_list: " + str(len(self.verb_set)) #debug
     
     #初期化
     self.init_log_p_z()
     self.init_log_p_x_z()
     self.init_log_p_y_z()
     self.init_log_p_z_xy()
+
 
   #p(z)を乱数で初期化
   def init_log_p_z(self):
@@ -33,7 +35,7 @@ class Classifier:
   #p(z | x)を乱数で初期化
   def init_log_p_x_z(self):
     self.log_p_x_z = {}
-    for noun in self.noun_list:
+    for noun in self.noun_set:
       self.log_p_x_z[noun] = []
       for i in xrange(0, self.k):
         self.log_p_x_z[noun].append(math.log10(random.random()))
@@ -41,7 +43,7 @@ class Classifier:
   #p(z | y)を乱数で初期化
   def init_log_p_y_z(self):
     self.log_p_y_z = {}
-    for verb in self.verb_list:
+    for verb in self.verb_set:
       self.log_p_y_z[verb] = []
       for i in xrange(0, self.k):
         self.log_p_y_z[verb].append(math.log10(random.random()))
@@ -50,9 +52,9 @@ class Classifier:
   #p[x][y][z]の順なので注意すること
   def init_log_p_z_xy(self):
     self.log_p_z_xy = {}
-    for noun in self.noun_list:
+    for noun in self.noun_set:
       self.log_p_z_xy[noun] = {}
-      for verb in self.verb_list:
+      for verb in self.verb_set:
         self.log_p_z_xy[noun][verb] = []
         for i in xrange(0, self.k):
           self.log_p_z_xy[noun][verb].append(math.log10(random.random()))
@@ -60,12 +62,12 @@ class Classifier:
   def get_perplexity(self, tuplelist):
     s = 0.0
     for (n, v) in tuplelist:
-      p = 10 ** self.get_log_p_x_y(n, v)
-      base = 2
+      p = 10.0 ** self.get_log_p_x_y(n, v)
+      base = 2.0
       s += math.log(p, base)
 
     s /= (- len (tuplelist))
-    return 2**s
+    return 2.0 ** s
 
   def learn_Estep(self):
     for (noun, verb) in self.n_v_list:
@@ -104,16 +106,22 @@ class Classifier:
         deno += self.n_v_counter[(x, y)] * (10 ** self.log_p_z_xy[x][y][i])
       log_deno = math.log10(deno)
 
-      for noun in self.noun_list:
+      for noun in self.noun_set:
         # print ("  " + noun) #debug
         nume = 0
-        for verb in self.verb_list:
+        for verb in self.verb_set:
           # print ("    " + verb) #debug
-
-          # これがボトルネックだった
-          # if (noun, verb) in self.n_v_list:
           nume += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][i])
-        log_nume = math.log10(nume)
+        if nume > 0:
+          log_nume = math.log10(nume)
+        else:
+          print "line121: nume= " + str(nume)
+
+          for _noun in self.noun_set:
+            for _verb in self.verb_set:
+              for _i in xrange(0, self.k):
+                print str(_noun) + "\t" + str(_verb) + "\t" + str(_i) + "\t" + str(10 ** self.log_p_z_xy[_noun][_verb][_i])
+          sys.exit(1)
           
         self.log_p_x_z[noun][i] = log_nume - log_deno
 
@@ -126,12 +134,20 @@ class Classifier:
         deno += self.n_v_counter[(x, y)] * (10 ** self.log_p_z_xy[x][y][i])
       log_deno = math.log10(deno)
 
-      for verb in self.verb_list:
+      for verb in self.verb_set:
         nume = 0
-        for noun in self.noun_list:
+        for noun in self.noun_set:
           nume += self.n_v_counter[(noun, verb)] * (10 ** self.log_p_z_xy[noun][verb][i])
-        log_nume = math.log10(nume)
-          
+        if nume > 0:
+          log_nume = math.log10(nume)
+        else:
+          print "line142: nume= " + str(nume)
+          for _noun in self.noun_set:
+            for _verb in self.verb_set:
+              for _i in xrange(0, self.k):
+                print str(_noun) + "\t" + str(_verb) + "\t" + str(_i) + "\t" + str(10 ** self.log_p_z_xy[_noun][_verb][_i])
+          sys.exit(1)
+
         self.log_p_y_z[verb][i] = log_nume - log_deno
 
     return
@@ -139,36 +155,19 @@ class Classifier:
   def learnEM(self):
     prev_log_likelihood = 0
     log_likelihood = 1000000
-    eps = 100
+    eps = 10
     
     while (abs(log_likelihood - prev_log_likelihood) > eps):
-      prev_likelihood = log_likelihood
+      prev_log_likelihood = log_likelihood
       self.learn_Estep()
       self.learn_Mstep()
 
       log_likelihood = 0
       for (noun, verb) in self.n_v_list:
         log_likelihood += self.n_v_counter[(noun, verb)] * self.get_log_p_x_y(noun, verb)
-      print log_likelihood
+      print str(log_likelihood) + " (" + str(log_likelihood - prev_log_likelihood) + ")" #debug
 
     return
-
-
-  #getter
-  def get_k(self):
-    return self.k
-
-  def get_n_v_list(self):
-    return self.n_v_list
-
-  # def get_log_p_x_z(self):
-  #   return self.log_p_x_z
-
-  def get_log_p_y_z(self):
-    return self.log_p_y_z
-
-  def get_log_p_z_xy(self):
-    return self.log_p_z_xy
 
   def get_log_p_x_y(self, noun, verb):
     ans = 0.0
@@ -176,3 +175,40 @@ class Classifier:
       ans += 10.0 ** (self.log_p_z[i] + self.log_p_x_z[noun][i] + self.log_p_y_z[verb][i])
     return math.log10(ans)
 
+
+  def sum_of_p_z_is_1(self):
+    eps = 0.0001
+    sum = 0.0
+    for i in xrange(0, self.k):
+      sum += 10 ** self.log_p_z[i]
+
+    return (abs(1.0 - sum) < eps)
+
+  def sum_of_p_x_z_is_1(self):
+    eps = 0.0001
+    sum = 0.0
+    for x in self.noun_set:
+      for i in xrange(0, self.k):
+        sum += 10 ** (self.log_p_x_z[x][i] + self.log_p_z[i])
+
+    return (abs(1.0 - sum) < eps)
+
+  def sum_of_p_y_z_is_1(self):
+    eps = 0.0001
+    sum = 0.0
+    for y in self.verb_set:
+      for i in xrange(0, self.k):
+        sum += 10 ** (self.log_p_y_z[y][i] + self.log_p_z[i])
+
+    return (abs(1.0 - sum) < eps)
+
+  def sum_of_p_x_y_is_1(self):
+    sum = 0.0
+    eps = 0.0001
+
+    for noun in self.noun_set:
+      for verb in self.verb_set:
+        sum += 10 ** self.get_log_p_x_y(noun, verb)
+
+    return (abs(1.0 - sum) < eps)
+        
