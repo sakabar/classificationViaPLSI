@@ -93,10 +93,10 @@ class Classifier:
         self.log_p_z_xy[noun][verb][i] = log10_nume - math.log10(deno)
 
     #debug
-    print "--in Estep--"
-    for i in xrange(0, self.k):
-      print (10 ** self.log_p_z_xy["重軽傷"]["負う"][i])
-    print "------------"
+    # print "--in Estep--"
+    # for i in xrange(0, self.k):
+    #   print (10 ** self.log_p_z_xy["重軽傷"]["負う"][i])
+    # print "------------"
 
     return
 
@@ -139,17 +139,19 @@ class Classifier:
         if nume > 0:
           log_nume = math.log10(nume)
         else:
-          print "line121: nume= " + str(nume)
-          for verb in self.verb_set:
-            n_debug = self.n_v_counter[(noun, verb)]
-            p = (10 ** self.log_p_z_xy[noun][verb][i])
-            print "z_" + str(i) + " " + str(noun) + " " + str(verb) + " " + str(n_debug) + " " + str(p)
+          #ゼロ対してlogをとることができないため。
+          log_nume = math.log10(sys.float_info.epsilon)
+          # print "line121: nume= " + str(nume)
+
+          # for verb in self.verb_set:
+          #   n_debug = self.n_v_counter[(noun, verb)]
+          #   p = (10 ** self.log_p_z_xy[noun][verb][i])
+          #   print "z_" + str(i) + " " + str(noun) + " " + str(verb) + " " + str(n_debug) + " " + str(p)
 
           # for _noun in self.noun_set:
           #   for _verb in self.verb_set:
           #     for _i in xrange(0, self.k):
           #       print str(_noun) + "\t" + str(_verb) + "\t" + str(_i) + "\t" + str(10 ** self.log_p_z_xy[_noun][_verb][_i])
-          sys.exit(1)
           
         self.log_p_x_z[noun][i] = log_nume - log_deno
 
@@ -171,12 +173,14 @@ class Classifier:
         if nume > 0:
           log_nume = math.log10(nume)
         else:
-          print "line142: nume= " + str(nume)
+          #ゼロ対してlogをとることができないため。
+          log_nume = math.log10(sys.float_info.epsilon)
+          # print "line142: nume= " + str(nume)
+
           # for _noun in self.noun_set:
           #   for _verb in self.verb_set:
           #     for _i in xrange(0, self.k):
           #       print str(_noun) + "\t" + str(_verb) + "\t" + str(_i) + "\t" + str(10 ** self.log_p_z_xy[_noun][_verb][_i])
-          sys.exit(1)
 
         self.log_p_y_z[verb][i] = log_nume - log_deno
 
@@ -190,7 +194,7 @@ class Classifier:
   def learnEM(self):
     prev_log_likelihood = 0
     log_likelihood = 1000000
-    eps = 1.0
+    eps = 10.0
     
     while (abs(log_likelihood - prev_log_likelihood) > eps):
       prev_log_likelihood = log_likelihood
