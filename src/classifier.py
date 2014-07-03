@@ -13,7 +13,7 @@ class Classifier:
     self.noun_set = (list(set(map(lambda (n,v): n, n_v_list))))
     self.verb_set = (list(set(map(lambda (n,v): v, n_v_list))))
 
-    #個数はv_v_counterで記録
+    #個数はn_v_counterで記録
     self.n_v_counter = collections.Counter(n_v_list)
 
     # print "noun_list: " + str(len(self.noun_set)) #debug
@@ -35,7 +35,14 @@ class Classifier:
     for i in xrange(0, self.k):
       self.log_p_z.append(math.log10(random.random()))
 
-  #p(z | x)を乱数で初期化
+    #正規化する
+    #Sum_{z} p(z) = 1
+    #logが入っているので注意
+    z = sum( map(lambda p:10**p, self.log_p_z))
+    self.log_p_z = map(lambda p: p - math.log10(z), self.log_p_z)
+    
+
+  #p(x | z)を乱数で初期化
   def init_log_p_x_z(self):
     self.log_p_x_z = {}
     for noun in self.noun_set:
@@ -43,13 +50,25 @@ class Classifier:
       for i in xrange(0, self.k):
         self.log_p_x_z[noun].append(math.log10(random.random()))
 
-  #p(z | y)を乱数で初期化
+      #正規化する
+      #Sum_{z} p(x|z) = 1
+      z = sum( map(lambda p:10**p, self.log_p_x_z[noun]))
+      self.log_p_x_z[noun] = map(lambda p: p - math.log10(z), self.log_p_x_z[noun])
+
+
+  #p(y | z)を乱数で初期化
   def init_log_p_y_z(self):
     self.log_p_y_z = {}
     for verb in self.verb_set:
       self.log_p_y_z[verb] = []
       for i in xrange(0, self.k):
         self.log_p_y_z[verb].append(math.log10(random.random()))
+
+      #正規化する
+      #Sum_{z} p(y|z) = 1
+      z = sum( map(lambda p:10**p, self.log_p_y_z[verb]))
+      self.log_p_y_z[verb] = map(lambda p: p - math.log10(z), self.log_p_y_z[verb])
+
 
   #p(z | x, y)を乱数で初期化
   #p[x][y][z]の順なので注意すること
@@ -62,6 +81,12 @@ class Classifier:
         for i in xrange(0, self.k):
           self.log_p_z_xy[noun][verb].append(math.log10(random.random()))
 
+      #正規化する
+      #Sum_{z} p(z|x, y) = 1
+      z = sum( map(lambda p:10**p, self.log_p_z_xy[noun][verb]))
+      self.log_p_z_xy[noun][verb] = map(lambda p: p - math.log10(z), self.log_p_z_xy[noun][verb])
+
+             
   def get_perplexity(self, tuplelist):
     s = 0.0
     for (n, v) in tuplelist:
@@ -194,7 +219,7 @@ class Classifier:
   def learnEM(self):
     prev_log_likelihood = 0
     log_likelihood = 1000000
-    eps = 10.0
+    eps = 0.01
     
     while (abs(log_likelihood - prev_log_likelihood) > eps):
       prev_log_likelihood = log_likelihood
