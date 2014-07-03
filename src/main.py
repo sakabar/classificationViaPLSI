@@ -9,7 +9,7 @@ if __name__ == '__main__':
     n_v_list.append(tuple(n_v))
 
     
-  k = 5
+  k = 10
   clf = classifier.Classifier(k, n_v_list)
 
   print str(k) + " topics."
